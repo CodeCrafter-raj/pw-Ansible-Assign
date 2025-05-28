@@ -1,0 +1,26 @@
+---
+- name: Manage Users and Groups on EC2 Instance
+  hosts: webservers
+  become: true # This allows Ansible to use sudo on the remote machine
+  tasks:
+    - name: Ensure 'developers' group exists
+      ansible.builtin.group:
+        name: developers
+        state: present
+
+    - name: Create 'devuser' with /bin/bash shell and add to 'developers' group
+      ansible.builtin.user:
+        name: devuser
+        comment: "Development User"
+        shell: /bin/bash
+        groups: developers
+        append: yes
+        state: present
+
+    - name: Ensure 'devuser' has sudo privileges without password (for testing)
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/devuser_sudo
+        create: true
+        mode: '0440'
+        line: 'devuser ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
